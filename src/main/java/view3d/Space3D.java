@@ -21,6 +21,7 @@ public class Space3D extends SubScene {
     private final double SCALE = 1200.0;
     private final Axes3D axes;
     private final CameraHandler cameraHandler;
+    private boolean is2DMode = false;
 
     public Space3D(double width, double height) {
         super(new Group(), width, height, true, SceneAntialiasing.BALANCED);
@@ -32,6 +33,7 @@ public class Space3D extends SubScene {
         this.rootGroup.getChildren().add(vectorGroup);
         this.cameraHandler = new CameraHandler(this);
     }
+
     public void populateSpace() {
         AppState state = AppState.getInstance();
         for (WordVector vec : state.getAllPcaVectors()) {
@@ -41,6 +43,7 @@ public class Space3D extends SubScene {
         }
         refreshPositions();
     }
+
     public void bindNodeClicks(java.util.function.Consumer<String> onNodeClicked) {
         for (Map.Entry<String, WordNode> entry : nodes.entrySet()) {
             String word = entry.getKey();
@@ -50,6 +53,16 @@ public class Space3D extends SubScene {
                 event.consume();
             });
         }
+    }
+
+    public void set2DMode(boolean is2D) {
+        this.is2DMode = is2D;
+        if (is2DMode) {
+            if (cameraHandler != null) {
+                cameraHandler.resetCamera();
+            }
+        }
+        refreshPositions();
     }
 
     public void refreshPositions() {
@@ -62,7 +75,12 @@ public class Space3D extends SubScene {
             if (node != null) {
                 node.setTranslateX(vec.getCoordinate(state.getXAxisIndex()) * dynamicScale);
                 node.setTranslateY(vec.getCoordinate(state.getYAxisIndex()) * dynamicScale);
-                node.setTranslateZ(vec.getCoordinate(state.getZAxisIndex()) * dynamicScale);
+
+                if (is2DMode) {
+                    node.setTranslateZ(0);
+                } else {
+                    node.setTranslateZ(vec.getCoordinate(state.getZAxisIndex()) * dynamicScale);
+                }
             }
         }
     }
@@ -148,6 +166,7 @@ public class Space3D extends SubScene {
         }
         return line;
     }
+
     public void resetHighlights() {
         nodes.values().forEach(n -> n.setHighlighted(false));
     }
@@ -157,6 +176,7 @@ public class Space3D extends SubScene {
             nodes.get(word).setHighlighted(true);
         }
     }
+
     public void drawAnalogyVector(String w1, String w2, String w3, String result) {
         clearVectors();
         axes.setVisible(false);
@@ -179,6 +199,7 @@ public class Space3D extends SubScene {
             vectorGroup.getChildren().add(createLine3D(n3, nResult, javafx.scene.paint.Color.CYAN));
         }
     }
+
     public Map<String, WordNode> getNodes() {
         return nodes;
     }
@@ -187,6 +208,27 @@ public class Space3D extends SubScene {
         WordNode node = nodes.get(word);
         if (node != null) {
             cameraHandler.centerOn(node.getTranslateX(), node.getTranslateY(), node.getTranslateZ());
+        }
+    } // כאן הייתה חסרה סגירת הסוגריים המסולסלים!
+
+    // הפונקציה החדשה שלנו, עכשיו היא ממוקמת נכון
+    public void drawDistanceLineAndDim(String w1, String w2) {
+        clearVectors(); // מנקה קודם
+        axes.setVisible(false);
+
+        // 1. קורא לפונקציה הקיימת שלך שעושה הכל שחור/עמום
+        nodes.values().forEach(n -> n.setDimmed(true));
+
+        // 2. מדליק מחדש רק את שתי הנבחרות
+        WordNode node1 = nodes.get(w1);
+        WordNode node2 = nodes.get(w2);
+
+        if (node1 != null) node1.setHighlighted(true);
+        if (node2 != null) node2.setHighlighted(true);
+
+        // 3. מצייר את הקו באמצעות הפונקציה הקיימת
+        if (node1 != null && node2 != null) {
+            vectorGroup.getChildren().add(createLine3D(node1, node2, Color.YELLOW));
         }
     }
 }

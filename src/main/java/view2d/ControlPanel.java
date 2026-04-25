@@ -14,6 +14,8 @@ public class ControlPanel extends VBox {
     private final ComboBox<Integer> comboY = new ComboBox<>();
     private final ComboBox<Integer> comboZ = new ComboBox<>();
     private final ComboBox<String> comboDistance = new ComboBox<>();
+    private Button btn2D = btn2D = new Button("2D View");
+    private Button btn3D = btn3D = new Button("3D View");
 
     private final TextField searchField = new TextField();
     private final Spinner<Integer> kSpinner = new Spinner<>(1, 50, 5);
@@ -28,7 +30,9 @@ public class ControlPanel extends VBox {
     private final Button btnProjection = new Button("Project on Axis");
     private final Button btnDistance = new Button("Distance");
 
+
     private final Button btnUndo = new Button("Undo");
+    private final Button btnRedo = new Button("Redo");
 
     public ControlPanel() {
         this.setPadding(new Insets(15));
@@ -53,6 +57,8 @@ public class ControlPanel extends VBox {
                 new Label("X Axis:"), comboX,
                 new Label("Y Axis:"), comboY,
                 new Label("Z Axis:"), comboZ,
+                btn2D,
+                btn3D,
                 new Separator(),
 
                 createWhiteLabel("Search & Grouping (K-NN)"),
@@ -75,7 +81,8 @@ public class ControlPanel extends VBox {
                 new HBox(10, btnProjection, btnDistance),
                 new Separator(),
 
-                btnUndo
+                btnUndo,
+                btnRedo
         );
 
         for (javafx.scene.Node node : this.getChildren()) {
@@ -109,5 +116,8 @@ public class ControlPanel extends VBox {
     public Button getBtnDistance() { return btnDistance; }
     public ComboBox<String> getComboDistance() { return comboDistance; }
 
+    public Button getBtn2D() { return btn2D; }
+    public Button getBtn3D() { return btn3D; }
     public Button getBtnUndo() { return btnUndo; }
+    public Button getBtnRedo() { return btnRedo; }
 }

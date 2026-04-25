@@ -15,8 +15,12 @@ import view2d.MetricsPanel;
 import view3d.Space3D;
 import io.DataLoader;
 import io.JsonDataLoader;
-
+import javafx.concurrent.Task;
 import java.util.*;
+import javafx.concurrent.Task;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public class AppController {
     private final Space3D space3D;
@@ -33,40 +37,61 @@ public class AppController {
         bindEvents();
     }
 
+
     public void loadInitialData() {
-        metricsPanel.updateStatus("Running Python script... Please wait.");
-        try {
-            ProcessBuilder pb = new ProcessBuilder("python", "embedder.py");
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-            process.waitFor();
-        } catch (Exception e) {
-            metricsPanel.updateStatus("Failed to run python: " + e.getMessage());
-        }
+        metricsPanel.updateStatus("Running Python script... Please wait (might take a minute).");
 
-        DataLoader loader = new JsonDataLoader();
-        try {
-            AppState.getInstance().initializeData(
-                    loader.loadVectors("full_vectors.json", VectorType.FULL_DIMENSION),
-                    loader.loadVectors("pca_vectors.json", VectorType.PCA_REDUCED)
-            );
-            space3D.populateSpace();
+        Task<Void> pythonTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // מריץ את סקריפט הפייתון
+                ProcessBuilder pb = new ProcessBuilder("python", "embedder.py");
+                pb.redirectErrorStream(true);
+                Process process = pb.start();
 
-            space3D.bindNodeClicks(word -> {
-                int k = controlPanel.getKSpinner().getValue();
-                try {
-                    history.executeCommand(new KnnCommand(space3D, word, k, getSelectedDistanceStrategy()));
-                    metricsPanel.updateStatus("Found " + k + " neighbors for '" + word + "' using " + getMetricName());
-                } catch (Exception ex) {
-                    metricsPanel.updateStatus("Error clicking node: " + ex.getMessage());
+                // *** התיקון החשוב: קריאת הפלט כדי שפייתון לא ייתקע ***
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        // מדפיס את מה שפייתון עושה לקונסול של האינטליג'יי/אקליפס
+                        System.out.println("Embedder.py: " + line);
+                    }
                 }
-            });
 
-            metricsPanel.updateStatus("Data loaded successfully.");
-        } catch (Exception e) {
-            metricsPanel.updateStatus("Error loading data: " + e.getMessage());
-        }
+                int exitCode = process.waitFor();
+
+                if (exitCode != 0) {
+                    throw new RuntimeException("Python script failed with exit code: " + exitCode + ". Check console for details.");
+                }
+
+                // קורא לקבצים רק אחרי שהפייתון סיים בהצלחה
+                io.DataLoader loader = new io.JsonDataLoader();
+                state.AppState.getInstance().initializeData(
+                        loader.loadVectors("full_vectors.json", models.VectorType.FULL_DIMENSION),
+                        loader.loadVectors("pca_vectors.json", models.VectorType.PCA_REDUCED)
+                );
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                space3D.populateSpace();
+                metricsPanel.updateStatus("Data loaded successfully.");
+            }
+
+            @Override
+            protected void failed() {
+                metricsPanel.updateStatus("Error: " + getException().getMessage());
+                getException().printStackTrace(); // ידפיס את השגיאה המלאה לקונסול
+            }
+        };
+
+        new Thread(pythonTask).start();
     }
+
+
+
 
     private math.DistanceStrategy getSelectedDistanceStrategy() {
         if ("Euclidean Distance".equals(getMetricName())) {
@@ -242,6 +267,7 @@ public class AppController {
                 if (v1.isPresent() && v2.isPresent()) {
                     double dist = getSelectedDistanceStrategy().calculate(v1.get().coordinates(), v2.get().coordinates());
                     metricsPanel.updateStatus(getMetricName() + " between '" + w1 + "' and '" + w2 + "' is: " + String.format("%.4f", dist));
+                    space3D.drawDistanceLineAndDim(w1, w2);
                 } else {
                     metricsPanel.updateStatus("Error: One or both words not found in dictionary.");
                 }
@@ -250,10 +276,26 @@ public class AppController {
             }
         });
 
+        // 2D / 3D
+        controlPanel.getBtn2D().setOnAction(e -> {
+            space3D.set2DMode(true);
+            metricsPanel.updateStatus("Switched to 2D Mode");
+        });
+
+        controlPanel.getBtn3D().setOnAction(e -> {
+            space3D.set2DMode(false);
+            metricsPanel.updateStatus("Switched to 3D Mode");
+        });
+
         // Undo
         controlPanel.getBtnUndo().setOnAction(e -> {
             history.undo();
             metricsPanel.updateStatus("Undo performed.");
+        });
+        // Redo
+        controlPanel.getBtnRedo().setOnAction(e -> {
+            history.redo();
+            metricsPanel.updateStatus("Redo executed.");
         });
     }
 }
