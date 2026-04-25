@@ -4,8 +4,8 @@ import math.DistanceStrategy;
 import math.VectorOperations;
 import models.WordVector;
 import state.AppState;
-import view3d.Space3D;
 import exceptions.WordNotFoundException;
+import view3d.Space3D;
 
 public class AnalogyCommand implements Command {
     private final String w1, w2, w3;

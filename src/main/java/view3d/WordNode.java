@@ -13,7 +13,7 @@ public class WordNode extends Group {
 
     private final PhongMaterial defaultMaterial = new PhongMaterial(Color.LIGHTCYAN);
     private final PhongMaterial highlightMaterial = new PhongMaterial(Color.LIMEGREEN);
-    private final PhongMaterial dimmedMaterial = new PhongMaterial(Color.BLACK);
+    private final PhongMaterial dimmedMaterial = new PhongMaterial(Color.DARKGRAY);
 
     public WordNode(String word) {
         this.word = word;

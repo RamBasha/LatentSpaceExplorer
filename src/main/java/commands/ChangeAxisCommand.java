@@ -1,8 +1,8 @@
 package commands;
 
 import state.AppState;
-import view3d.Space3D;
 import exceptions.InvalidAxisException;
+import view3d.Space3D;
 
 public class ChangeAxisCommand implements Command {
     private final Space3D space3D;

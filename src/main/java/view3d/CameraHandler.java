@@ -48,8 +48,10 @@ public class CameraHandler {
         rotateY.setAngle(0);
     }
     public void resetCamera() {
-        if (camera != null) {
-            camera.getTransforms().clear();
-        }
+        rotateX.setAngle(0);
+        rotateY.setAngle(0);
+        translate.setX(0);
+        translate.setY(0);
+        translate.setZ(-800);
     }
 }
