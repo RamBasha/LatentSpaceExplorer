@@ -40,13 +40,7 @@ public class CameraHandler {
             translate.setZ(translate.getZ() + se.getDeltaY() * 2);
         });
     }
-    public void centerOn(double x, double y, double z) {
-        translate.setX(x);
-        translate.setY(y);
-        translate.setZ(z - 500);
-        rotateX.setAngle(0);
-        rotateY.setAngle(0);
-    }
+
     public void resetCamera() {
         rotateX.setAngle(0);
         rotateY.setAngle(0);

@@ -64,37 +64,5 @@ public class VectorOperations {
         return center;
     }
 
-    public static List<WordVector> solveAnalogy(double[] target1, double[] minus2, double[] plus3,
-                                                List<WordVector> allVectors, DistanceStrategy strategy,
-                                                int k, Set<String> excludeWords) throws DimensionMismatchException {
-        double[] tempResult = subtract(target1, minus2);
 
-        double[] finalVector = add(tempResult, plus3);
-
-        return findKNearest(finalVector, allVectors, strategy, k, excludeWords);
-    }
-    public static double dotProduct(double[] v1, double[] v2) {
-        double sum = 0;
-        for (int i = 0; i < v1.length; i++) sum += v1[i] * v2[i];
-        return sum;
-    }
-
-    public static double[] projectVector(double[] target, double[] v1, double[] v2) {
-        try {
-            double[] direction = subtract(v2, v1);
-            double dotProductVD = dotProduct(target, direction);
-            double dotProductDD = dotProduct(direction, direction);
-
-            if (dotProductDD == 0) return new double[direction.length];
-
-            double scalar = dotProductVD / dotProductDD;
-            double[] projection = new double[direction.length];
-            for (int i = 0; i < direction.length; i++) {
-                projection[i] = scalar * direction[i];
-            }
-            return projection;
-        } catch (DimensionMismatchException e) {
-            return new double[target.length];
-        }
-    }
 }

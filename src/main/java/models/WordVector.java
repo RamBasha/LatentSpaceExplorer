@@ -1,11 +1,8 @@
 package models;
 
-import java.util.Arrays;
 
 public record WordVector(String word, double[] coordinates, VectorType type) {
-    public int getDimensionCount() {
-        return coordinates.length;
-    }
+
 
     public double getCoordinate(int axisIndex) {
         if (axisIndex < 0 || axisIndex >= coordinates.length) {
